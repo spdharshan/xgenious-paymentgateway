@@ -1,5 +1,5 @@
 {
-    "name": "xgenious/paymentgateway",
+    "name": "xgenious-fundorex/paymentgateway",
     "description": "a laravel package to manage multiple payment gateway",
     "keywords": [
         "Laravel",
