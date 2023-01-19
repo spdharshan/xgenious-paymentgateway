@@ -137,15 +137,15 @@ class PaypalPay extends PaymentGatewayBase
      *
      * return @void
      * */
-    public function ipn_response($args = []){
+    /*public function ipn_response($args = []){
 
-        /** Get the payment ID before session clear **/
+        // Get the payment ID before session clear
         $payment_id = session()->get('paypal_order_id');
         $script_order_id = session()->get('script_order_id');
         $paypal_ipn_url = session()->get('paypal_ipn_url');
         $paypal_cancel_url = session()->get('paypal_cancel_url');
         $request = request();
-        /** clear the session payment ID **/
+        // clear the session payment ID
         session()->forget(['paypal_order_id','script_order_id','paypal_cancel_url','paypal_ipn_url']);
 
         if (empty($request->get('PayerID')) || empty($request->get('token'))) {
@@ -161,6 +161,31 @@ class PaypalPay extends PaymentGatewayBase
             ]);
         }
         return redirect()->to($paypal_cancel_url);
+    }*/
+    public function ipn_response($args){
+
+        /** Get the payment ID before session clear **/
+        $payment_id = session()->get('paypal_payment_id');
+        $paypal_track = session()->get('paypal_track');
+        $request = $args['request'];
+
+        /** clear the session payment ID **/
+        session()->forget(['paypal_payment_id','paypal_track']);
+
+        if (empty($request->PayerID) || empty($request->token)) {
+            return redirect()->to($args['cancel_url']);
+        }
+
+        $payment = Payment::get($payment_id, $this->_api_context);
+        $execution = new PaymentExecution();
+        $execution->setPayerId($request->PayerID);
+
+        /**Execute the payment **/
+        $result = $payment->execute($execution, $this->_api_context);
+        if ($result->getState() === 'approved') {
+            return $this->verified_data(['transaction_id' => $payment_id]);
+        }
+        return redirect()->to($args['cancel_url']);
     }
 
     /**
